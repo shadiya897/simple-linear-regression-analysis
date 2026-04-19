@@ -1,0 +1,283 @@
+---
+title: "simple linear regression"
+author: "Shadiya"
+date: "2026-04-19"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r}
+#install.packages(c("ggplot2","corrplot"))
+
+library(ggplot2)
+library(corrplot)
+
+metrics <- function(actual, pred) {
+  mae <- mean(abs(actual - pred))
+  rmse <- sqrt(mean((actual - pred)^2))
+  r2 <- 1 - sum((actual - pred)^2) / sum((actual - mean(actual))^2)
+  
+  return(list(MAE = mae, RMSE = rmse, R2 = r2))
+}
+```
+
+BOSTON DATASET
+```{r}
+
+boston <- read.csv("Boston.csv")
+
+
+head(boston)
+str(boston)
+#summary(boston)
+
+# Dataset dimensions
+dim(boston)
+
+# Column names
+colnames(boston)
+
+
+# Check NA
+colSums(is.na(boston))
+
+# Check NULL
+is.null(boston)
+
+#correlation
+cor_matrix <- cor(boston)
+print(cor_matrix)
+
+# Heatmap
+corrplot(cor_matrix, method="color", tl.col="black")
+
+#TRAIN TEST SPLIT 
+set.seed(123)
+split <- sample(1:nrow(boston), 0.8*nrow(boston))
+
+train <- boston[split, ]
+test  <- boston[-split, ]
+
+#MODEL 
+model <- lm(medv ~ rm, data=train)
+
+# Summary (VERY IMPORTANT)
+summary(model)
+
+# Intercept & slope
+coef(model)
+
+# Correlation between variables
+cor(train$rm, train$medv)
+sort(cor(boston)[, "medv"], decreasing = TRUE)
+#PREDICTION 
+train_pred <- predict(model, train)
+test_pred  <- predict(model, test)
+
+# METRICS 
+metrics(train$medv, train_pred)
+metrics(test$medv, test_pred)
+
+# PLOT 
+ggplot(train, aes(x=rm, y=medv)) +
+  geom_point() +
+  geom_smooth(method="lm", color="red") +
+  ggtitle("Boston Regression Line")
+
+```
+
+DIABETES DATASET
+```{r}
+diabetes <- read.csv("diabetes.csv")
+
+# Info
+head(diabetes)
+str(diabetes)
+#summary(diabetes)
+
+dim(diabetes)
+colnames(diabetes)
+
+# Missing
+colSums(is.na(diabetes))
+is.null(diabetes)
+
+# Correlation
+cor(diabetes)
+cor_matrix <- cor(diabetes)
+corrplot(cor_matrix, method="color")
+
+# Split
+set.seed(123)
+split <- sample(1:nrow(diabetes), 0.8*nrow(diabetes))
+
+train <- diabetes[split, ]
+test  <- diabetes[-split, ]
+
+# Model
+model <- lm(BMI ~ Insulin, data=train)
+
+summary(model)
+coef(model)
+cor(train$Insulin, train$BMI)
+
+# Prediction
+train_pred <- predict(model, train)
+test_pred  <- predict(model, test)
+
+metrics(train$BMI, train_pred)
+metrics(test$BMI, test_pred)
+
+# Plot
+ggplot(train, aes(x=Insulin, y=BMI)) +
+  geom_point() +
+  geom_smooth(method="lm", color="green")
+```
+AUTO MPG DATASET
+```{r}
+auto <- read.csv("auto-mpg[1].csv")
+
+auto$horsepower <- as.numeric(auto$horsepower)
+
+# Info
+head(auto)
+str(auto)
+#summary(auto)
+
+dim(auto)
+colnames(auto)
+
+# Missing
+colSums(is.na(auto))
+is.null(auto)
+auto$horsepower <- as.numeric(auto$horsepower)
+auto <- na.omit(auto)
+# Correlation
+cor_matrix <- cor(auto[,sapply(auto,is.numeric)])
+corrplot(cor_matrix, method="color")
+
+# Split
+set.seed(123)
+split <- sample(1:nrow(auto), 0.8*nrow(auto))
+
+train <- auto[split, ]
+test  <- auto[-split, ]
+
+# Model
+model <- lm(mpg ~ weight, data=train)
+
+summary(model)
+coef(model)
+cor(train$weight, train$mpg)
+
+# Prediction
+train_pred <- predict(model, train)
+test_pred  <- predict(model, test)
+
+metrics(train$mpg, train_pred)
+metrics(test$mpg, test_pred)
+
+# Plot
+ggplot(train, aes(x=weight, y=mpg)) +
+  geom_point() +
+  geom_smooth(method="lm", color="blue")
+```
+
+ADVERTISING DATASET
+```{r}
+data <- read.csv("advertising.csv")
+
+head(data)
+str(data)
+#summary(data)
+dim(data)
+colnames(data)
+
+colSums(is.na(data))
+is.null(data)
+
+cor_matrix <- cor(data)
+corrplot(cor_matrix, method="color")
+
+set.seed(123)
+split <- sample(1:nrow(data), 0.8*nrow(data))
+
+train <- data[split, ]
+test  <- data[-split, ]
+
+model <- lm(Sales ~ TV, data=train)
+
+summary(model)
+coef(model)
+cor(train$TV, train$Sales)
+
+train_pred <- predict(model, train)
+test_pred  <- predict(model, test)
+
+metrics(train$Sales, train_pred)
+metrics(test$Sales, test_pred)
+
+ggplot(train, aes(x=TV, y=Sales)) +
+  geom_point() +
+  geom_smooth(method="lm", color="red")
+```
+HOUSING DATASET
+```{r}
+
+
+housing <- read.csv("housing[1] (1).csv")
+
+head(housing)
+str(housing)
+#summary(housing)
+
+dim(housing)
+colnames(housing)
+
+#MISSING VALUES 
+colSums(is.na(housing))
+is.null(housing)
+
+#DATA CLEANING 
+# Remove categorical column for correlation
+num_data <- housing[,sapply(housing,is.numeric)]
+housing <- na.omit(housing)
+#CORRELATION 
+cor_matrix <- cor(num_data)
+corrplot(cor_matrix, method="color", tl.col="black")
+
+#TRAIN TEST SPLIT
+set.seed(123)
+split <- sample(1:nrow(housing), 0.8*nrow(housing))
+
+train <- housing[split, ]
+test  <- housing[-split, ]
+
+#MODEL
+model <- lm(median_house_value ~ median_income, data=train)
+
+# Summary
+summary(model)
+
+# Coefficients
+coef(model)
+
+# Correlation
+cor(train$median_income, train$median_house_value)
+
+#PREDICTION 
+train_pred <- predict(model, train)
+test_pred  <- predict(model, test)
+
+#METRICS
+metrics(train$median_house_value, train_pred)
+metrics(test$median_house_value, test_pred)
+
+#PLOT 
+ggplot(train, aes(x=median_income, y=median_house_value)) +
+  geom_point() +
+  geom_smooth(method="lm", color="orange") +
+  ggtitle("Housing Price vs Income")
+```
+
+
